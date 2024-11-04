@@ -96,7 +96,7 @@ public class Documents {
         System.out.print("============================");
         int id = sc.nextInt();
 
-        String sql = "DELETE FROM citizen WHERE d_id = ?";
+        String sql = "DELETE FROM document WHERE d_id = ?";
         conf.deleteRecord(sql, id);
     }
         
