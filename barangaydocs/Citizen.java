@@ -1,6 +1,7 @@
 
 package barangaydocs;
 
+import java.util.InputMismatchException;
 import java.util.Scanner;
 
 public class Citizen {
@@ -9,51 +10,75 @@ public class Citizen {
     
     public void getCitizen(){
         
-        do { 
-            System.out.println(" ================= ");
-            System.out.println("|  Adding Citizen |");
-            System.out.println(" ================= ");
-            System.out.println("1. ADD Citizen    |");
-            System.out.println("2. VIEW Citizen   |");
-            System.out.println("3. UPDATE Citizen |");
-            System.out.println("4. DELETE Citizen |");
-            System.out.println("5. EXIT           |");
-            System.out.println("Enter Action:     |");
-            System.out.println("------------------ ");
-            int action = sc.nextInt();
-            Citizen hehe = new Citizen();
-            
-            switch(action){
-                case 1:
-                        hehe.addCitizen();
-                    break;
-                case 2:
-                        hehe.viewCitizens();
-                    break;    
-               case 3:
-                        hehe.updateCitizen();
-                    break;     
-               case 4:
-                        hehe.deleteCitizen();
-                    break;
-               case 5:
-                   System.out.println("Exiting Adding Citizen. Goodbye!");
-                    return;
-                default:
-                    System.out.println("Invalid action. Please try again.");
-                    break;
+     do {
+        System.out.println(" ================= ");
+        System.out.println("|  Adding Citizen |");
+        System.out.println(" ================= ");
+        System.out.println("1. ADD Citizen    |");
+        System.out.println("2. VIEW Citizen   |");
+        System.out.println("3. UPDATE Citizen |");
+        System.out.println("4. DELETE Citizen |");
+        System.out.println("5. EXIT           |");
+        System.out.println("Enter Action:     |");
+        System.out.println("------------------ ");
+    
+        int action = -1;
+        boolean validAction = false;
+
+        while (!validAction) {
+            try {
+                action = sc.nextInt();
+                if (action >= 1 && action <= 5) {
+                    validAction = true;
+                } else {
+                    System.out.println("Invalid action. Please enter a number between 1 and 5.");
+                }
+            } catch (InputMismatchException e) {
+                System.out.println("Invalid input. Please enter an integer.");
+                sc.next();
             }
+        }
+        Citizen hehe = new Citizen();
+    
+        switch(action) {
+            case 1:
+                hehe.addCitizen();
+                break;
+            case 2:
+                hehe.viewCitizens();
+                break;    
+            case 3:
+                hehe.updateCitizen();
+                break;     
+            case 4:
+                hehe.deleteCitizen();
+                break;
+            case 5:
+                System.out.println("Exiting Citizen. Returning to Main Menu...");
+                return;
+        default:
+            System.out.println("Invalid action. Please try again.");
+            break;
+    }
+
+        while (true) {
             System.out.println("Do you want to continue? (Y/N): ");
             response = sc.next();
         
-        }while(response.equalsIgnoreCase("y"));
+            if (response.equalsIgnoreCase("y") || response.equalsIgnoreCase("n")) {
+                break;
+            } else {
+                System.out.println("Invalid response. Please enter 'Y' or 'N'.");
+            }
+        }
+
+    } while (response.equalsIgnoreCase("y"));
       
-    }
+}
     
     public void addCitizen(){
         Scanner sc = new Scanner(System.in);
         config conf = new config();
-        System.out.println("=======================");
         System.out.print("Citizen First Name: ");
         String fname = sc.next();
         System.out.print("Citizen Last Name: ");
@@ -63,7 +88,6 @@ public class Citizen {
         System.out.print("Citizen Status: ");
         String status = sc.next();
         System.out.print("Citizen Postal Code: ");
-        System.out.print("\n=======================");
         String pcode = sc.next();
         
         String sql = "INSERT INTO citizen (c_fname, c_lname, c_email, c_status, c_postalCode) VALUES (?, ?, ?, ?, ?)";
@@ -73,46 +97,95 @@ public class Citizen {
         
     }
     private void viewCitizens() {
-        config conf = new config();
-        String BDRAQuery = "SELECT * FROM citizen";
-        String[] BDRAHeaders = { "ID","First Name", "Last Name", "Email" ,"Status" ,"Postal Code"};
-        String[] BDRAColumns = {"c_id" ,"c_fname", "c_lname", "c_email", "c_status" ,"c_postalCode"};
+    config conf = new config();
+    String countQuery = "SELECT COUNT(*) FROM citizen";
 
-        conf.viewRecords(BDRAQuery, BDRAHeaders, BDRAColumns);
+    if (conf.getSingleValue(countQuery) == 0) {
+        System.out.println("No citizens found in the database.");
+        return;
     }
+
+    String BDRAQuery = "SELECT * FROM citizen";
+    String[] BDRAHeaders = { "ID", "First Name", "Last Name", "Email", "Status", "Postal Code" };
+    String[] BDRAColumns = { "c_id", "c_fname", "c_lname", "c_email", "c_status", "c_postalCode" };
+
+    conf.viewRecords(BDRAQuery, BDRAHeaders, BDRAColumns);
+}
     private void updateCitizen() {
-        Scanner sc = new Scanner(System.in);
-        config conf = new config();
+    Scanner sc = new Scanner(System.in);
+    config conf = new config();
 
+    String countQuery = "SELECT COUNT(*) FROM citizen";
+    if (conf.getSingleValue(countQuery) == 0) {
+        System.out.println("No citizens found in the database yet.");
+        return;
+    }
+
+    int id = -1;
+
+
+    while (true) {
         System.out.print("Enter Citizen ID to Update: ");
-        int id = sc.nextInt();
-
-        System.out.print("=================== ");
-        System.out.print("New First Name: ");
-        String fname = sc.next();
-        System.out.print("New Last Name: ");
-        String lname = sc.next();
-        System.out.print("New Email: ");
-        String email = sc.next();
-        System.out.print("New Status: ");
-        String status = sc.next();
-        System.out.print("New Postal Code: ");
-        System.out.print("================== ");
-        String pcode = sc.next();       
-
-        String sql = "UPDATE citizen SET c_fname = ?, c_lname = ?, c_email = ?, c_status = ?, c_postalCode = ? WHERE c_id = ?";
-        conf.updateRecord(sql, fname, lname, email, status, pcode, id);
+        
+        try {
+            id = sc.nextInt();
+            String csql = "SELECT c_id FROM citizen WHERE c_id = ?";
+            if (conf.getSingleValue(csql, id) == 0) {
+                System.out.println("Citizen ID does not exist. Please try again.");
+            } else {
+                break;
+            }
+        } catch (InputMismatchException e) {
+            System.out.println("Invalid input. Please enter a numeric Citizen ID.");
+            sc.next();
+        }
     }
+
+    System.out.print("New First Name: ");
+    String fname = sc.next();
+    System.out.print("New Last Name: ");
+    String lname = sc.next();
+    System.out.print("New Email: ");
+    String email = sc.next();
+    System.out.print("New Status: ");
+    String status = sc.next();
+    System.out.print("New Postal Code: ");
+    String pcode = sc.next();
+
+    String sql = "UPDATE citizen SET c_fname = ?, c_lname = ?, c_email = ?, c_status = ?, c_postalCode = ? WHERE c_id = ?";
+    conf.updateRecord(sql, fname, lname, email, status, pcode, id);
+}
     private void deleteCitizen() {
-        Scanner sc = new Scanner(System.in);
-        config conf = new config();
+    Scanner sc = new Scanner(System.in);
+    config conf = new config();
 
-        System.out.print("============================");
-        System.out.print("Enter Citizen ID to Delete: ");
-        System.out.print("============================");
-        int id = sc.nextInt();
-
-        String sql = "DELETE FROM citizen WHERE c_id = ?";
-        conf.deleteRecord(sql, id);
+    String countQuery = "SELECT COUNT(*) FROM citizen";
+    if (conf.getSingleValue(countQuery) == 0) {
+        System.out.println("No citizens found in the database yet.");
+        return;
     }
+
+    int id = -1;
+
+    while (true) {
+        System.out.print("Enter Citizen ID to Delete: ");
+        
+        try {
+            id = sc.nextInt();
+            String csql = "SELECT c_id FROM citizen WHERE c_id = ?";
+            if (conf.getSingleValue(csql, id) == 0) {
+                System.out.println("Citizen ID does not exist. Please try again.");
+            } else {
+                break;
+            }
+        } catch (InputMismatchException e) {
+            System.out.println("Invalid input. Please enter a numeric Citizen ID.");
+            sc.next();
+        }
+    }
+
+    String sql = "DELETE FROM citizen WHERE c_id = ?";
+    conf.deleteRecord(sql, id);
+    System.out.println("Citizen with ID " + id + " has been deleted successfully.");
+  }
 }
